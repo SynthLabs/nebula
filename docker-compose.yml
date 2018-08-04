@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  nebula-1:
+    image: nebula:latest
+  nebula-2:
+    image: nebula:latest
+    depends_on:
+        - nebula-1
+  nebula-3:
+    image: nebula:latest
+    depends_on:
+        - nebula-1
