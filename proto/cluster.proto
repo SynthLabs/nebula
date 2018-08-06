@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package cluster;
+
+service Cluster {
+    rpc StreamEvents(stream Event) returns (Response) {}
+}
+
+message Event {
+    string name = 1;
+}
+
+message Response {
+    string name = 1;
+}

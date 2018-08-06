@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
-	"net/http"
+	"math/rand"
+	"os"
+	"time"
 
-	"github.com/hashicorp/memberlist"
+	"github.com/synthlabs/nebula/cluster"
 )
 
 var (
@@ -15,33 +16,30 @@ var (
 
 func init() {
 	flag.Parse()
+
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
 
 func main() {
-	conf := memberlist.DefaultLocalConfig()
-	conf.BindPort = *port
-
-	list, err := memberlist.Create(conf)
+	c, err := cluster.NewClusterManager(&cluster.ManagerConfig{
+		DiscoveryListenPort: *port,
+	})
 	if err != nil {
-		log.Fatal("Failed to create memberlist: " + err.Error())
+		log.Fatalln("Failed to create cluster", err)
 	}
 
-	_, err = list.Join([]string{"nebula-1"})
-	if err != nil {
-		log.Fatal(err)
-	}
+	c.Start()
 
-	node := list.LocalNode()
-	log.Printf("Local member %s:%d\n", node.Addr, node.Port)
+	c.Seed([]string{"nebula-1"})
 
-	// Ask for members of the cluster
-	for _, member := range list.Members() {
-		log.Printf("Member: %s %s\n", member.Name, member.Addr)
-	}
+	hostname, _ := os.Hostname()
 
-	p := node.Port + 1
-
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", p), nil); err != nil {
-		fmt.Println(err)
+	t := time.NewTicker(time.Second * time.Duration(rand.Intn(15)+1))
+	for range t.C {
+		log.Println("BROADCASTING EVENT FROM", hostname)
+		event := &cluster.Event{
+			Name: "Event from " + hostname,
+		}
+		c.Broadcast() <- event
 	}
 }

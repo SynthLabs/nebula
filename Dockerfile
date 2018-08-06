@@ -18,6 +18,6 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 # Copy our static executable
 COPY --from=builder /go/bin/nebula /go/bin/nebula
 
-EXPOSE 7946
+EXPOSE 7946 7777
 
 ENTRYPOINT ["/go/bin/nebula"]
